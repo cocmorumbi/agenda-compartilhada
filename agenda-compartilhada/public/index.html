@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agenda de Compromissos</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: #eee;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #007bff;
+      color: white;
+    }
+    .content {
+      display: none;
+    }
+    .content.active {
+      display: block;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+    .day {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .day:hover {
+      background-color: #f0f0f0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🗓️ Agenda</h1>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('calendario')">Calendário</div>
+    <div class="tab" onclick="switchTab('compromissos')">Compromissos</div>
+  </div>
+
+  <div id="calendario" class="content active">
+    <h2>Calendário Mensal</h2>
+    <div id="calendar" class="calendar"></div>
+  </div>
+
+  <div id="compromissos" class="content">
+    <h2>Compromissos do Dia</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Denis</th>
+          <th>Neuza</th>
+          <th>Maju</th>
+          <th>Priscila</th>
+          <th>Carla</th>
+        </tr>
+      </thead>
+      <tbody id="agenda-table">
+        <!-- Compromissos vão aqui -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal simples -->
+  <div id="modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc;">
+    <h3>Novo Compromisso</h3>
+    <label>Hora: <input type="time" id="hora" /></label><br><br>
+    <label>Nome: 
+      <select id="pessoa">
+        <option>Denis</option>
+        <option>Neuza</option>
+        <option>Maju</option>
+        <option>Priscila</option>
+        <option>Carla</option>
+      </select>
+    </label><br><br>
+    <label>Descrição: <input type="text" id="descricao" /></label><br><br>
+    <button onclick="salvarCompromisso()">Salvar</button>
+    <button onclick="fecharModal()">Cancelar</button>
+  </div>
+
+  <script>
+    const calendarEl = document.getElementById("calendar");
+    const tableBody = document.getElementById("agenda-table");
+    let compromissos = {
+      "Denis": [],
+      "Neuza": [],
+      "Maju": [],
+      "Priscila": [],
+      "Carla": []
+    };
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+      document.querySelector(`.tab[onclick*="${tab}"]`).classList.add("active");
+      document.getElementById(tab).classList.add("active");
+      if (tab === "compromissos") renderTabela();
+    }
+
+    function gerarCalendario() {
+      calendarEl.innerHTML = ""; // limpa antes de gerar de novo
+      const data = new Date();
+      const ano = data.getFullYear();
+      const mes = data.getMonth();
+      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = dia;
+
+    // verifica se existe compromisso nesse dia
+        const temCompromisso = Object.values(compromissos).some(lista =>
+          lista.some(c => c.dia === dia)
+        );
+        if (temCompromisso) {
+          div.style.backgroundColor = "#d1ffd1"; // verde claro se tiver compromisso
+        }
+
+        div.onclick = () => abrirModal(dia);
+        calendarEl.appendChild(div);
+      }
+    }
+
+
+    let diaSelecionado = null;
+
+    function abrirModal(dia) {
+      diaSelecionado = dia;
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function fecharModal() {
+      document.getElementById("modal").style.display = "none";
+      document.getElementById("hora").value = "";
+      document.getElementById("descricao").value = "";
+    }
+
+    function salvarCompromisso() {
+      const hora = document.getElementById("hora").value;
+      const pessoa = document.getElementById("pessoa").value;
+      const desc = document.getElementById("descricao").value;
+      if (!hora || !desc) return alert("Preencha tudo!");
+
+      compromissos[pessoa].push({ dia: diaSelecionado, hora, desc });
+      fecharModal();
+      salvarNoLocalStorage();
+      gerarCalendario();
+    }
+
+    function salvarNoLocalStorage() {
+      localStorage.setItem("compromissos", JSON.stringify(compromissos));
+    }
+
+    function carregarDoLocalStorage() {
+      const dados = localStorage.getItem("compromissos");
+      if (dados) {
+        compromissos = JSON.parse(dados);
+      }
+    }
+
+    function renderTabela() {
+      tableBody.innerHTML = "";
+      for (let h = 8; h <= 17; h++) {
+        const horaFormatada = `${h.toString().padStart(2, '0')}:00`;
+        const tr = document.createElement("tr");
+        const tdHora = document.createElement("td");
+        tdHora.innerText = horaFormatada;
+        tr.appendChild(tdHora);
+
+        ["Denis", "Neuza", "Maju", "Priscila", "Carla"].forEach(pessoa => {
+          const td = document.createElement("td");
+          const compromisso = compromissos[pessoa].find(c => c.hora === horaFormatada);
+          td.innerText = compromisso ? compromisso.desc : "";
+          tr.appendChild(td);
+        });
+
+        tableBody.appendChild(tr);
+      }
+    }
+
+    gerarCalendario();
+  </script>
+</body>
+</html>
