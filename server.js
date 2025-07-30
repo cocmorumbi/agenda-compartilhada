@@ -1,10 +1,12 @@
 // server.js
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
 
 const app = express();
 app.use(cors());
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json()); // aceita JSON vindo do frontend
 
 // Rota para salvar compromisso
@@ -37,6 +39,11 @@ app.get("/compromissos", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Servidor rodando em http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
