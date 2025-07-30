@@ -27,10 +27,17 @@ app.post("/compromissos", async (req, res) => {
 // Rota para buscar compromissos de um mês
 app.get("/compromissos", async (req, res) => {
   const { mes, ano } = req.query;
+  const result = await pool.query(
+    "SELECT * FROM compromissos WHERE mes = $1 AND ano = $2",
+    [mes, ano]
+  );
+
+app.get("/compromissos", async (req, res) => {
+  const { dia, mes, ano } = req.query;
   try {
     const result = await pool.query(
-      "SELECT * FROM compromissos WHERE mes = $1 AND ano = $2",
-      [mes, ano]
+      "SELECT * FROM compromissos WHERE dia = $1 AND mes = $2 AND ano = $3",
+      [dia, mes, ano]
     );
     res.json(result.rows);
   } catch (err) {

@@ -1,5 +1,6 @@
 const calendarEl = document.getElementById("calendar");
 const tableBody = document.getElementById("agenda-table");
+
 let compromissos = {
   "Denis": [],
   "Neuza": [],
@@ -29,7 +30,6 @@ function gerarCalendario() {
   const ano = data.getFullYear();
   const mes = data.getMonth();
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay(); // 0 = domingo
-
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
   // Preenche espaços vazios antes do dia 1
@@ -45,11 +45,11 @@ function gerarCalendario() {
     div.className = "day";
     div.innerText = dia;
     div.onclick = () => abrirModal(dia);
+
     const hoje = new Date();
     if (dia === hoje.getDate() && mes === hoje.getMonth()) {
       div.style.border = "2px solid #007bff";
     }
-
 
     verificarCompromissos(dia).then(tem => {
       if (tem) div.style.backgroundColor = "#d1ffd1";
@@ -59,31 +59,31 @@ function gerarCalendario() {
   }
 }
 
-// Verifica se há compromissos para um dia
+// ✅ Verifica se há compromissos para um dia
 async function verificarCompromissos(dia) {
   const data = new Date();
   const mes = data.getMonth() + 1;
   const ano = data.getFullYear();
 
-  const res = await fetch(`http://localhost:3000/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
+  const res = await fetch(`/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
   const dados = await res.json();
   return dados.length > 0;
 }
 
-// Abre modal e carrega compromissos do dia
+// 📝 Abre modal e define o dia selecionado
 function abrirModal(dia) {
   diaSelecionado = dia;
   document.getElementById("modal").style.display = "block";
 }
 
-// Fecha modal
+// ❌ Fecha modal e limpa campos
 function fecharModal() {
   document.getElementById("modal").style.display = "none";
   document.getElementById("hora").value = "";
   document.getElementById("descricao").value = "";
 }
 
-// Salva compromisso no backend
+// 💾 Salva compromisso no backend
 async function salvarCompromisso() {
   const hora = document.getElementById("hora").value;
   const pessoa = document.getElementById("pessoa").value;
@@ -95,7 +95,7 @@ async function salvarCompromisso() {
   const mes = data.getMonth() + 1;
   const ano = data.getFullYear();
 
-  await fetch("http://localhost:3000/compromissos", {
+  await fetch("/compromissos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -113,14 +113,14 @@ async function salvarCompromisso() {
   carregarCompromissos();
 }
 
-// Carrega compromissos do dia selecionado para a tabela
+// 📦 Carrega compromissos do backend para a tabela
 async function carregarCompromissos() {
-  const hoje = new Date();
-  const dia = hoje.getDate();
-  const mes = hoje.getMonth() + 1;
-  const ano = hoje.getFullYear();
+  const data = new Date();
+  const dia = diaSelecionado || data.getDate();
+  const mes = data.getMonth() + 1;
+  const ano = data.getFullYear();
 
-  const res = await fetch(`http://localhost:3000/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
+  const res = await fetch(`/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
   const dados = await res.json();
 
   // Limpa listas
@@ -138,7 +138,7 @@ async function carregarCompromissos() {
   renderTabela();
 }
 
-// Renderiza a tabela diária
+// 📊 Renderiza a tabela com os compromissos do dia
 function renderTabela() {
   tableBody.innerHTML = "";
   for (let h = 8; h <= 17; h++) {
@@ -159,5 +159,7 @@ function renderTabela() {
   }
 }
 
-// Inicializa
-gerarCalendario();
+// 🚀 Inicializa ao carregar a página
+window.onload = () => {
+  gerarCalendario();
+};
