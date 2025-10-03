@@ -1,216 +1,275 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Agenda de Compromissos</title>
+  <title>Agenda de compromissos - COC Morumbi</title>
   <style>
     body {
-      font-family: sans-serif;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #3A6604;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 1000;
+    }
+    .sidebar {
+      margin-top: 60px;
+      width: 180px;
+      background: #99CD85;
+      display: flex;
+      flex-direction: column;
       padding: 20px;
     }
-    .tabs {
+    .sidebar div {
+      margin: 10px 0;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 8px;
+      font-weight: bold;
+      background: #3A6604;
+      color: white;
+      transition: all 0.7s ease;
+    }
+    .sidebar div:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+    .sidebar div.active {
+      background: linear-gradient(45deg, yellow, #f7f79a);
+      color: black;
+      box-shadow: 0 0 10px rgba(255,255,0,0.6);
+    }
+    .main {
+      flex: 1;
+      padding: 100px 20px 20px 20px;
+      overflow-y: auto;
+    }
+    .calendar-controls {
       display: flex;
-      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
       margin-bottom: 20px;
     }
-    .tab {
-      padding: 10px 20px;
-      background: #eee;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: #007bff;
+    .calendar-controls button {
+      background: #3A6604;
       color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s ease, transform 0.2s ease;
     }
-    .content {
-      display: none;
+    .calendar-controls button:hover {
+      background: #2a4703;
+      transform: scale(1.1);
     }
-    .content.active {
-      display: block;
-    }
-
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 10px;
+      gap: 5px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s ease;
+      background-image: url("logo-coc.png"); 
+      background-image: rgba (255, 255, 255, 0.6);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 700px; /* tamanho da imagem de fundo */ 
     }
     .day {
-      border: 1px solid #ccc;
-      padding: 10px;
+      border: 3px solid #ccc;
+      padding: 12px;
       text-align: center;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
     }
     .day:hover {
-      background-color: #f0f0f0;
+      transform: scale(1.05);
+      background: #eaffea;
+    }
+    .day.has-event {
+      background: #d1ffd1;
+    }
+    .day.full {
+      background: #ffb3b3;
+    }
+    .day.today {
+      border: 3px solid #83E509;
+    }
+    .agenda {
+      display: none;
+      border-top: 3px solid #99CD85;
+      padding-top: 10px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .agenda.active {
+      display: block;
+      opacity: 1;
+    }
+    .slot {
+      border: 1px solid #ccc;
+      padding: 6px;
+      margin: 3px 0;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s ease;
+      position: relative;
+    }
+    .slot:hover {
+      background: #f0f0f0;
+    }
+    .slot.booked {
+      background: linear-gradient(90deg, #ffe5e5, #ffcccc);
+      border-left: 5px solid red;
+      font-weight: bold;
+      cursor: default;
+    }
+    .slot.booked:hover::after {
+      content: "Clique no ❌ para cancelar";
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      top: -25px;
+      left: 10px;
+      white-space: nowrap;
+    }
+    .cancel-btn {
+      background: rgb(255, 0, 0);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.3s ease;
+    }
+    .cancel-btn:hover {
+      background: darkred;
+    }
+    #mes-atual {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      color: #161616;
+      min-width: 180px;
+    }
+    #nav-mes {
+      display: none; /* escondido por padrão */
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    #nav-mes button {
+      background: #3A6604;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s ease, transform 0.2s ease;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
+
+    #nav-mes button:hover {
+      background: #2a4703;
+      transform: scale(1.1);
+    }
+
+
+    /* Animações extras */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes flash {
+      0% { background: #d4ffd4; }
+      100% { background: inherit; }
+    }
+
+    /* 📱 Responsividade */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 60px;
+      }
+      .sidebar div {
+        flex: 1;
+        margin: 5px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      .main {
+        padding: 20px;
+      }
+      .calendar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      #mes-atual {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
+  <header>Agenda de compromissos - COC Morumbi</header>
 
-  <h1>🗓️ Agenda</h1>
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('calendario')">Calendário</div>
-    <div class="tab" onclick="switchTab('compromissos')">Compromissos</div>
+  <div class="sidebar">
+    <div onclick="selecionarPessoa('Denis')">Denis</div>
+    <div onclick="selecionarPessoa('Neuza')">Neuza</div>
+    <div onclick="selecionarPessoa('Maju')">Maju</div>
+    <div onclick="selecionarPessoa('Priscila')">Priscila</div>
+    <div onclick="selecionarPessoa('Carla')">Carla</div>
+    <div onclick="abrirHoje()">📅 Hoje</div>
   </div>
 
-  <div id="calendario" class="content active">
-    <h2>Calendário Mensal</h2>
+  <div class="main">
+    <h2 id="pessoa-titulo">Selecione uma pessoa</h2>
+
+    <div id="nav-mes" class="calendar-controls">
+      <button onclick="mudarMes(-1)">⏮</button>
+      <div id="mes-atual"></div>
+      <button onclick="mudarMes(1)">⏭</button>
+    </div>
+
     <div id="calendar" class="calendar"></div>
+    <div id="agenda" class="agenda"></div>
   </div>
 
-  <div id="compromissos" class="content">
-    <h2>Compromissos do Dia</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Hora</th>
-          <th>Denis</th>
-          <th>Neuza</th>
-          <th>Maju</th>
-          <th>Priscila</th>
-          <th>Carla</th>
-        </tr>
-      </thead>
-      <tbody id="agenda-table">
-        <!-- Compromissos vão aqui -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Modal simples -->
-  <div id="modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc;">
-    <h3>Novo Compromisso</h3>
-    <label>Hora: <input type="time" id="hora" /></label><br><br>
-    <label>Nome: 
-      <select id="pessoa">
-        <option>Denis</option>
-        <option>Neuza</option>
-        <option>Maju</option>
-        <option>Priscila</option>
-        <option>Carla</option>
-      </select>
-    </label><br><br>
-    <label>Descrição: <input type="text" id="descricao" /></label><br><br>
-    <button onclick="salvarCompromisso()">Salvar</button>
-    <button onclick="fecharModal()">Cancelar</button>
-  </div>
-
-  <script>
-    const calendarEl = document.getElementById("calendar");
-    const tableBody = document.getElementById("agenda-table");
-    let compromissos = {
-      "Denis": [],
-      "Neuza": [],
-      "Maju": [],
-      "Priscila": [],
-      "Carla": []
-    };
-
-    function switchTab(tab) {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-      document.querySelector(`.tab[onclick*="${tab}"]`).classList.add("active");
-      document.getElementById(tab).classList.add("active");
-      if (tab === "compromissos") renderTabela();
-    }
-
-    function gerarCalendario() {
-      calendarEl.innerHTML = ""; // limpa antes de gerar de novo
-      const data = new Date();
-      const ano = data.getFullYear();
-      const mes = data.getMonth();
-      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-
-      for (let dia = 1; dia <= diasNoMes; dia++) {
-        const div = document.createElement("div");
-        div.className = "day";
-        div.innerText = dia;
-
-    // verifica se existe compromisso nesse dia
-        const temCompromisso = Object.values(compromissos).some(lista =>
-          lista.some(c => c.dia === dia)
-        );
-        if (temCompromisso) {
-          div.style.backgroundColor = "#d1ffd1"; // verde claro se tiver compromisso
-        }
-
-        div.onclick = () => abrirModal(dia);
-        calendarEl.appendChild(div);
-      }
-    }
-
-
-    let diaSelecionado = null;
-
-    function abrirModal(dia) {
-      diaSelecionado = dia;
-      document.getElementById("modal").style.display = "block";
-    }
-
-    function fecharModal() {
-      document.getElementById("modal").style.display = "none";
-      document.getElementById("hora").value = "";
-      document.getElementById("descricao").value = "";
-    }
-
-    function salvarCompromisso() {
-      const hora = document.getElementById("hora").value;
-      const pessoa = document.getElementById("pessoa").value;
-      const desc = document.getElementById("descricao").value;
-      if (!hora || !desc) return alert("Preencha tudo!");
-
-      compromissos[pessoa].push({ dia: diaSelecionado, hora, desc });
-      fecharModal();
-      salvarNoLocalStorage();
-      gerarCalendario();
-    }
-
-    function salvarNoLocalStorage() {
-      localStorage.setItem("compromissos", JSON.stringify(compromissos));
-    }
-
-    function carregarDoLocalStorage() {
-      const dados = localStorage.getItem("compromissos");
-      if (dados) {
-        compromissos = JSON.parse(dados);
-      }
-    }
-
-    function renderTabela() {
-      tableBody.innerHTML = "";
-      for (let h = 8; h <= 17; h++) {
-        const horaFormatada = `${h.toString().padStart(2, '0')}:00`;
-        const tr = document.createElement("tr");
-        const tdHora = document.createElement("td");
-        tdHora.innerText = horaFormatada;
-        tr.appendChild(tdHora);
-
-        ["Denis", "Neuza", "Maju", "Priscila", "Carla"].forEach(pessoa => {
-          const td = document.createElement("td");
-          const compromisso = compromissos[pessoa].find(c => c.hora === horaFormatada);
-          td.innerText = compromisso ? compromisso.desc : "";
-          tr.appendChild(td);
-        });
-
-        tableBody.appendChild(tr);
-      }
-    }
-
-    gerarCalendario();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
