@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agenda de compromissos - COC Morumbi</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #3A6604;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 1000;
+    }
+    .sidebar {
+      margin-top: 60px;
+      width: 180px;
+      background: #99CD85;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .sidebar div {
+      margin: 10px 0;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 8px;
+      font-weight: bold;
+      background: #3A6604;
+      color: white;
+      transition: all 0.7s ease;
+    }
+    .sidebar div:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+    .sidebar div.active {
+      background: linear-gradient(45deg, yellow, #f7f79a);
+      color: black;
+      box-shadow: 0 0 10px rgba(255,255,0,0.6);
+    }
+    .main {
+      flex: 1;
+      padding: 100px 20px 20px 20px;
+      overflow-y: auto;
+    }
+    .calendar-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .calendar-controls button {
+      background: #3A6604;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .calendar-controls button:hover {
+      background: #2a4703;
+      transform: scale(1.1);
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s ease;
+      background-image: url("logo-coc.png"); 
+      background-image: rgba (255, 255, 255, 0.6);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 700px; /* tamanho da imagem de fundo */ 
+    }
+    .day {
+      border: 3px solid #ccc;
+      padding: 12px;
+      text-align: center;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    .day:hover {
+      transform: scale(1.05);
+      background: #eaffea;
+    }
+    .day.has-event {
+      background: #d1ffd1;
+    }
+    .day.full {
+      background: #ffb3b3;
+    }
+    .day.today {
+      border: 3px solid #83E509;
+    }
+    .agenda {
+      display: none;
+      border-top: 3px solid #99CD85;
+      padding-top: 10px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .agenda.active {
+      display: block;
+      opacity: 1;
+    }
+    .slot {
+      border: 1px solid #ccc;
+      padding: 6px;
+      margin: 3px 0;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s ease;
+      position: relative;
+    }
+    .slot:hover {
+      background: #f0f0f0;
+    }
+    .slot.booked {
+      background: linear-gradient(90deg, #ffe5e5, #ffcccc);
+      border-left: 5px solid red;
+      font-weight: bold;
+      cursor: default;
+    }
+    .slot.booked:hover::after {
+      content: "Clique no ❌ para cancelar";
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      top: -25px;
+      left: 10px;
+      white-space: nowrap;
+    }
+    .cancel-btn {
+      background: rgb(255, 0, 0);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.3s ease;
+    }
+    .cancel-btn:hover {
+      background: darkred;
+    }
+    #mes-atual {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      color: #161616;
+      min-width: 180px;
+    }
+    #nav-mes {
+      display: none; /* escondido por padrão */
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    #nav-mes button {
+      background: #3A6604;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    #nav-mes button:hover {
+      background: #2a4703;
+      transform: scale(1.1);
+    }
+
+
+    /* Animações extras */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes flash {
+      0% { background: #d4ffd4; }
+      100% { background: inherit; }
+    }
+
+    /* 📱 Responsividade */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 60px;
+      }
+      .sidebar div {
+        flex: 1;
+        margin: 5px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      .main {
+        padding: 20px;
+      }
+      .calendar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      #mes-atual {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Agenda de compromissos - COC Morumbi</header>
+
+  <div class="sidebar">
+    <div onclick="selecionarPessoa('Denis')">Denis</div>
+    <div onclick="selecionarPessoa('Neuza')">Neuza</div>
+    <div onclick="selecionarPessoa('Maju')">Maju</div>
+    <div onclick="selecionarPessoa('Priscila')">Priscila</div>
+    <div onclick="selecionarPessoa('Carla')">Carla</div>
+    <div onclick="abrirHoje()">📅 Hoje</div>
+  </div>
+
+  <div class="main">
+    <h2 id="pessoa-titulo">Selecione uma pessoa</h2>
+
+    <div id="nav-mes" class="calendar-controls">
+      <button onclick="mudarMes(-1)">⏮</button>
+      <div id="mes-atual"></div>
+      <button onclick="mudarMes(1)">⏭</button>
+    </div>
+
+    <div id="calendar" class="calendar"></div>
+    <div id="agenda" class="agenda"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
