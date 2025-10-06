@@ -135,15 +135,28 @@ function gerarSlots() {
 
 async function marcarCompromisso(pessoa, hora, dia, mes, ano, desc) {
   try {
-    await fetch("/compromissos", {
+    const res = await fetch("/compromissos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pessoa, descricao: desc, hora, dia, mes, ano })
     });
-    await renderCalendario(); // atualiza compromissos do mês
+
+    if (!res.ok) {
+      const erro = await res.text();
+      throw new Error(`Erro do servidor: ${erro}`);
+    }
+
+    const novoComp = await res.json();
+    console.log("Compromisso criado:", novoComp);
+
+    // 🔁 Atualiza lista global antes de reabrir a agenda
+    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
+    compromissosMes = await resMes.json();
+
     abrirAgenda(new Date(ano, mes - 1, dia));
   } catch (e) {
     console.error("Erro ao marcar compromisso:", e);
+    alert("Não foi possível salvar o compromisso. Veja o console para detalhes.");
   }
 }
 
