@@ -8,7 +8,7 @@ let diaSelecionado = null;
 let anoAtual = new Date().getFullYear();
 let mesAtual = new Date().getMonth();
 
-
+// Função ao selecionar pessoa
 function selecionarPessoa(nome, event) {
   pessoaSelecionada = nome;
   pessoaTitulo.innerText = "Agenda de " + nome;
@@ -18,16 +18,16 @@ function selecionarPessoa(nome, event) {
 
   // Marca o botão ativo
   document.querySelectorAll(".sidebar div").forEach(el => el.classList.remove("active"));
-  event.target.classList.add("active");
+  if (event) event.target.classList.add("active");
 
-  // Mostra as setas e o nome do mês
+  // Mostra as setas e nome do mês
   const navMes = document.getElementById("nav-mes");
   if (navMes) navMes.style.display = "flex";
 
   renderCalendario();
 }
 
-
+// Navegar meses
 function mudarMes(delta) {
   mesAtual += delta;
   if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
@@ -35,7 +35,7 @@ function mudarMes(delta) {
   renderCalendario();
 }
 
-
+// Renderiza o calendário
 async function renderCalendario() {
   calendarEl.innerHTML = "";
   agendaEl.innerHTML = "";
@@ -55,7 +55,7 @@ async function renderCalendario() {
     calendarEl.appendChild(vazio);
   }
 
-  // Gera os dias do mês
+  // Dias do mês
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const d = new Date(anoAtual, mesAtual, dia);
     const div = document.createElement("div");
@@ -64,30 +64,111 @@ async function renderCalendario() {
 
     if (d.toDateString() === hoje.toDateString()) div.classList.add("today");
 
-    // Buscar compromissos no banco
+    // Buscar compromissos do dia
     try {
       const res = await fetch(`/compromissos?dia=${dia}&mes=${mesAtual + 1}&ano=${anoAtual}`);
       const dados = await res.json();
 
-      if (dados.length > 0) {
-        div.classList.add("has-event");
-
-        // Se todos os horários estiverem ocupados
-        if (dados.length >= gerarSlots().length) {
-          div.classList.remove("has-event");
-          div.classList.add("full");
-        }
+      if (dados.length > 0) div.classList.add("has-event");
+      if (dados.length >= gerarSlots().length) {
+        div.classList.remove("has-event");
+        div.classList.add("full");
       }
     } catch (e) {
       console.error("Erro ao buscar compromissos:", e);
     }
 
+    // Clique abre agenda
     div.onclick = () => abrirAgenda(d);
     calendarEl.appendChild(div);
   }
 }
 
+// Abrir agenda do dia
+async function abrirAgenda(data) {
+  if (!pessoaSelecionada) return alert("Selecione uma pessoa primeiro");
 
+  diaSelecionado = data;
+  const dia = data.getDate();
+  const mes = data.getMonth() + 1;
+  const ano = data.getFullYear();
+
+  agendaEl.innerHTML = `<h3>${pessoaSelecionada} - ${data.toLocaleDateString("pt-BR")}</h3>`;
+
+  try {
+    const res = await fetch(`/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
+    const dados = await res.json();
+    const compromissosDia = dados.filter(c => c.pessoa === pessoaSelecionada);
+
+    gerarSlots().forEach(hora => {
+      const slotDiv = document.createElement("div");
+      slotDiv.className = "slot";
+      slotDiv.innerText = hora;
+
+      const comp = compromissosDia.find(c => c.hora === hora);
+
+      if (comp) {
+        slotDiv.classList.add("booked");
+        slotDiv.innerHTML = `${hora} - ${comp.descricao} 
+          <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}','${hora}','${dia}','${mes}','${ano}')">❌</button>`;
+      } else {
+        slotDiv.onclick = async () => {
+          const desc = prompt("Descrição do compromisso:");
+          if (desc) await marcarCompromisso(pessoaSelecionada, hora, dia, mes, ano, desc);
+        };
+      }
+
+      agendaEl.appendChild(slotDiv);
+    });
+
+    agendaEl.classList.add("active");
+  } catch (e) {
+    console.error("Erro ao abrir agenda:", e);
+  }
+}
+
+// Horários disponíveis
+function gerarSlots() {
+  let horarios = [];
+  for (let h = 7; h < 17; h++) {
+    horarios.push(`${String(h).padStart(2, "0")}:00`);
+    horarios.push(`${String(h).padStart(2, "0")}:30`);
+  }
+  horarios.push("17:00");
+  return horarios;
+}
+
+// Marcar compromisso
+async function marcarCompromisso(pessoa, hora, dia, mes, ano, desc) {
+  try {
+    await fetch("/compromissos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pessoa, descricao: desc, hora, dia, mes, ano })
+    });
+    renderCalendario();
+    abrirAgenda(new Date(ano, mes - 1, dia));
+  } catch (e) {
+    console.error("Erro ao marcar compromisso:", e);
+  }
+}
+
+// Cancelar compromisso
+async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
+  try {
+    await fetch("/compromissos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pessoa, hora, dia, mes, ano })
+    });
+    renderCalendario();
+    abrirAgenda(new Date(ano, mes - 1, dia));
+  } catch (e) {
+    console.error("Erro ao cancelar compromisso:", e);
+  }
+}
+
+// Abrir agenda de hoje
 async function abrirHoje(event) {
   pessoaSelecionada = null;
   pessoaTitulo.innerText = "Compromissos de Hoje";
@@ -96,7 +177,6 @@ async function abrirHoje(event) {
   if (event) event.target.classList.add("active");
 
   calendarEl.style.display = "none";
-
   const navMes = document.getElementById("nav-mes");
   if (navMes) navMes.style.display = "none";
 
@@ -127,89 +207,5 @@ async function abrirHoje(event) {
   }
 }
 
-
-async function abrirAgenda(data) {
-  if (!pessoaSelecionada) return alert("Selecione uma pessoa primeiro");
-
-  diaSelecionado = data;
-  const dia = data.getDate();
-  const mes = data.getMonth() + 1;
-  const ano = data.getFullYear();
-
-  agendaEl.innerHTML = `<h3>${pessoaSelecionada} - ${data.toLocaleDateString("pt-BR")}</h3>`;
-
-  try {
-    const res = await fetch(`/compromissos?dia=${dia}&mes=${mes}&ano=${ano}`);
-    const dados = await res.json();
-
-    const compromissosDia = dados.filter(c => c.pessoa === pessoaSelecionada);
-
-    gerarSlots().forEach(hora => {
-      const slotDiv = document.createElement("div");
-      slotDiv.className = "slot";
-      slotDiv.innerText = hora;
-
-      const comp = compromissosDia.find(c => c.hora === hora);
-
-      if (comp) {
-        slotDiv.classList.add("booked");
-        slotDiv.innerHTML = `${hora} - ${comp.descricao} 
-          <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}','${hora}','${dia}','${mes}','${ano}')">❌</button>`;
-      } else {
-        slotDiv.onclick = async () => {
-          const desc = prompt("Descrição do compromisso:");
-          if (desc) await marcarCompromisso(pessoaSelecionada, hora, dia, mes, ano, desc);
-        };
-      }
-
-      agendaEl.appendChild(slotDiv);
-    });
-
-    agendaEl.classList.add("active");
-  } catch (e) {
-    console.error("Erro ao abrir agenda:", e);
-  }
-}
-
-
-function gerarSlots() {
-  let horarios = [];
-  for (let h = 7; h < 17; h++) {
-    horarios.push(`${String(h).padStart(2, "0")}:00`);
-    horarios.push(`${String(h).padStart(2, "0")}:30`);
-  }
-  horarios.push("17:00");
-  return horarios;
-}
-
-
-async function marcarCompromisso(pessoa, hora, dia, mes, ano, desc) {
-  try {
-    await fetch("/compromissos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pessoa, descricao: desc, hora, dia, mes, ano })
-    });
-    renderCalendario();
-    abrirAgenda(new Date(ano, mes - 1, dia));
-  } catch (e) {
-    console.error("Erro ao marcar compromisso:", e);
-  }
-}
-
-async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
-  try {
-    await fetch("/compromissos", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pessoa, hora, dia, mes, ano })
-    });
-    renderCalendario();
-    abrirAgenda(new Date(ano, mes - 1, dia));
-  } catch (e) {
-    console.error("Erro ao cancelar compromisso:", e);
-  }
-}
-
-
+// Inicializa com agenda de hoje
 abrirHoje();
