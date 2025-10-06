@@ -97,7 +97,7 @@ async function abrirAgenda(data) {
   agendaEl.innerHTML = `<h3>${pessoaSelecionada} - ${data.toLocaleDateString("pt-BR")}</h3>`;
 
   // Filtra compromissos do dia e da pessoa
-  const compromissosDia = compromissosMes.filter(c => c.dia === dia && c.pessoa === pessoaSelecionada);
+  const compromissosDia = compromissosMes.filter(c => Number(c.dia) === dia && c.pessoa === pessoaSelecionada);
 
   gerarSlots().forEach(hora => {
     const slotDiv = document.createElement("div");
