@@ -11,7 +11,6 @@ app.use(express.json());
 // 👉 Servir os arquivos da pasta public (frontend)
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------------------- ROTAS API ---------------------- //
 
 // Buscar compromissos (filtrando por dia/mes/ano se vier na query)
 app.get("/compromissos", async (req, res) => {
@@ -75,13 +74,11 @@ app.delete("/compromissos", async (req, res) => {
   }
 });
 
-// ---------------------- FRONTEND ---------------------- //
 // Qualquer rota que não for API → carrega o index.html
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---------------------- PORTA ---------------------- //
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

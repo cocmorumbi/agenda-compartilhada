@@ -9,10 +9,6 @@ let diaSelecionado = null;
 let anoAtual = new Date().getFullYear();
 let mesAtual = new Date().getMonth();
 
-// ===============================
-// Funções principais
-// ===============================
-
 // Seleciona pessoa
 function selecionarPessoa(nome) {
   pessoaSelecionada = nome;
@@ -157,11 +153,6 @@ async function abrirAgenda(data) {
   agendaEl.classList.add("active");
 }
 
-// ===============================
-// API Calls
-// ===============================
-
-// Gera horários
 function gerarSlots() {
   let horarios = [];
   for (let h = 7; h < 17; h++) {
@@ -194,7 +185,4 @@ async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
   abrirAgenda(new Date(ano, mes-1, dia));
 }
 
-// ===============================
-// Início
-// ===============================
 abrirHoje();
