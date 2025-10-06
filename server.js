@@ -49,7 +49,7 @@ app.post("/compromissos", async (req, res) => {
       "INSERT INTO compromissos (pessoa, descricao, hora, dia, mes, ano) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
       [pessoa, descricao, hora, dia, mes, ano]
     );
-
+    console.log("Salvo:", result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
