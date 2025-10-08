@@ -181,21 +181,20 @@
       min-width:180px; 
     }
     .booked-item {
+      background: #f0f0f0;
+      border-radius: 6px;
+      padding: 4px 6px;
+      margin: 4px 0;
+      font-size: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #f6f8fb;
-      padding: 6px 8px;
-      border-radius: 6px;
-      margin: 6px 0;
     }
-    .book-text { flex: 1; text-align: left; }
-    .book-actions button {
-      margin-left: 6px;
-      border: none;
+    .booked-item .cancel-btn {
+      margin-left: 8px;
       background: transparent;
+      border: none;
       cursor: pointer;
-      font-size: 14px;
     }
     .horario {
       display: flex;
@@ -222,15 +221,13 @@
       justify-content: space-between;
       align-items: center;
     }
-    .edit-btn {
-      color: #2d89ef;
-      margin-left: 5px;
+    .cancelar-btn {
+      background: transparent;
+      border: none;
+      color: red;
       cursor: pointer;
+      font-weight: bold;
     }
-    .edit-btn:hover {
-      color: #1e6fd2;
-    }
-    .cancel-btn { color: #e53935; }
     .marcar-btn {
       background: #2196f3;
       color: white;
