@@ -91,47 +91,86 @@ async function renderCalendario() {
   carregandoCalendario = false;
 }
 
-async function abrirAgenda(data) {
-  if (!pessoaSelecionada) return alert("Selecione uma pessoa primeiro");
+async function abrirAgenda(dataSelecionada) {
+  const dia = dataSelecionada.getDate();
+  const mes = dataSelecionada.getMonth() + 1;
+  const ano = dataSelecionada.getFullYear();
 
+  diaSelecionado = { dia, mes, ano };
+
+  const agendaEl = document.getElementById("agenda");
   agendaEl.innerHTML = "";
-  diaSelecionado = data;
-  const dia = data.getDate();
-  const mes = data.getMonth() + 1;
-  const ano = data.getFullYear();
 
-  agendaEl.innerHTML = `<h3>${pessoaSelecionada} - ${data.toLocaleDateString("pt-BR")}</h3>`;
+  const dataFormatada = `${dia}/${mes}/${ano}`;
+  document.getElementById("pessoa-titulo").innerText =
+    pessoaSelecionada ? `${pessoaSelecionada} - ${dataFormatada}` : dataFormatada;
 
-  const compromissosDia = compromissosMes.filter(c => Number(c.dia) === dia && c.pessoa === pessoaSelecionada);
+  const horarios = gerarSlots();
 
-  gerarSlots().forEach(hora => {
-    const slotDiv = document.createElement("div");
-    slotDiv.className = "slot";
-    slotDiv.innerHTML = `<b>${hora}</b>`;
+  horarios.forEach((hora) => {
+    const compromissosHora = compromissosMes.filter(
+      (c) =>
+        c.dia === dia &&
+        c.mes === mes &&
+        c.ano === ano &&
+        c.hora === hora &&
+        (!pessoaSelecionada || c.pessoa === pessoaSelecionada)
+    );
 
-    // 👉 pega todos os compromissos desse horário
-    const compromissosHora = compromissosDia.filter(c => c.hora === hora);
+    const div = document.createElement("div");
+    div.className = "horario";
 
-    if (compromissosHora.length > 0) {
-      compromissosHora.forEach(c => {
-        const compDiv = document.createElement("div");
-        compDiv.className = "booked-item";
-        compDiv.innerHTML = `${c.descricao}
-          <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}','${c.hora}','${c.dia}','${c.mes}','${c.ano}')">❌</button>`;
-        slotDiv.appendChild(compDiv);
-      });
-      slotDiv.classList.add("booked");
-    } else {
-      slotDiv.onclick = async () => {
-        const desc = prompt("Descrição do compromisso:");
-        if (desc) await marcarCompromisso(pessoaSelecionada, hora, dia, mes, ano, desc);
+    // Cabeçalho da hora
+    const label = document.createElement("div");
+    label.className = "hora-label";
+    label.innerText = hora;
+    div.appendChild(label);
+
+    // Compromissos empilhados
+    const compromissosContainer = document.createElement("div");
+    compromissosContainer.className = "compromissos-container";
+
+    compromissosHora.forEach((comp) => {
+      const item = document.createElement("div");
+      item.className = "compromisso-item";
+      item.innerText = `${comp.descricao} (${comp.pessoa})`;
+
+      // botão pra cancelar individualmente
+      const btnCancelar = document.createElement("button");
+      btnCancelar.className = "cancelar-btn";
+      btnCancelar.innerText = "X";
+      btnCancelar.onclick = async () => {
+        if (confirm("Cancelar este compromisso?")) {
+          await fetch("/compromissos", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              pessoa: comp.pessoa,
+              hora: comp.hora,
+              dia: comp.dia,
+              mes: comp.mes,
+              ano: comp.ano,
+            }),
+          });
+          abrirAgenda(dataSelecionada);
+          renderCalendario();
+        }
       };
-    }
 
-    agendaEl.appendChild(slotDiv);
+      item.appendChild(btnCancelar);
+      compromissosContainer.appendChild(item);
+    });
+
+    // botão de adicionar
+    const btn = document.createElement("button");
+    btn.className = "marcar-btn";
+    btn.innerText = "+";
+    btn.onclick = () => marcarCompromisso(hora, dia, mes, ano);
+
+    div.appendChild(compromissosContainer);
+    div.appendChild(btn);
+    agendaEl.appendChild(div);
   });
-
-  agendaEl.classList.add("active");
 }
 
 function gerarSlots() {
