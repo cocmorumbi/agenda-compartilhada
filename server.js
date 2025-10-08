@@ -33,6 +33,8 @@ app.get("/compromissos", async (req, res) => {
       query += ` AND ano = $${values.length}`;
     }
 
+    query += " ORDER BY hora, pessoa";
+
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (err) {
