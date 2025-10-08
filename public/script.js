@@ -118,8 +118,8 @@ async function abrirAgenda(data) {
         compDiv.className = "booked-item";
         compDiv.innerHTML = `
           ${c.descricao}
-          <button class="edit-btn" onclick="editarCompromisso('${pessoaSelecionada}','${c.hora}','${c.dia}','${c.mes}','${c.ano}','${c.descricao.replace(/'/g, "\\'")}')">✏️</button>
-          <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}','${c.hora}','${c.dia}','${c.mes}','${c.ano}')">❌</button>`;
+          <button class="edit-btn" onclick="editarCompromisso('${pessoaSelecionada}', '${c.descricao.replace(/'/g, "\\'")}', '${c.hora}', '${c.dia}', '${c.mes}', '${c.ano}')">✏️</button>
+          <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}', '${c.hora}', '${c.dia}', '${c.mes}', '${c.ano}')">❌</button>`;
         slotDiv.appendChild(compDiv);
       });
       slotDiv.classList.add("booked");
@@ -180,7 +180,7 @@ async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
   }
 }
 
-async function editarCompromisso(pessoa, hora, dia, mes, ano, descricaoAtual) {
+async function editarCompromisso(pessoa, descricaoAtual, hora, dia, mes, ano) {
   const novaDesc = prompt("Editar descrição:", descricaoAtual);
   if (!novaDesc || novaDesc === descricaoAtual) return;
 
