@@ -60,6 +60,71 @@ app.post("/compromissos", async (req, res) => {
   }
 });
 
+// Atualizar compromisso por id
+app.put('/compromissos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { descricao, pessoa, hora, dia, mes, ano } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE compromissos
+       SET descricao = COALESCE($1, descricao),
+           pessoa = COALESCE($2, pessoa),
+           hora = COALESCE($3, hora),
+           dia = COALESCE($4, dia),
+           mes = COALESCE($5, mes),
+           ano = COALESCE($6, ano)
+       WHERE id = $7
+       RETURNING *`,
+      [descricao, pessoa, hora, dia, mes, ano, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Compromisso não encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao atualizar compromisso:', err);
+    res.status(500).json({ error: 'Erro ao atualizar compromisso' });
+  }
+});
+
+ app.put("/compromissos", async (req, res) => {
+  try {
+    const { pessoa, hora, dia, mes, ano, descricao } = req.body;
+    const result = await pool.query(
+      `UPDATE compromissos
+       SET descricao=$1
+       WHERE pessoa=$2 AND hora=$3 AND dia=$4 AND mes=$5 AND ano=$6
+       RETURNING *`,
+      [descricao, pessoa, hora, dia, mes, ano]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).send("Compromisso não encontrado");
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao editar compromisso");
+  }
+});
+
+// (Opcional) deletar por id — mais robusto que deletar por combinação
+app.delete('/compromissos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM compromissos WHERE id = $1', [id]);
+    if (result.rowCount === 0) return res.status(404).send('Não encontrado');
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Erro ao excluir por id:', err);
+    res.status(500).send('Erro ao excluir');
+  }
+});
+
 // Cancelar compromisso
 app.delete("/compromissos", async (req, res) => {
   try {

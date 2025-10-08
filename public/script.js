@@ -116,7 +116,9 @@ async function abrirAgenda(data) {
       compromissosHora.forEach(c => {
         const compDiv = document.createElement("div");
         compDiv.className = "booked-item";
-        compDiv.innerHTML = `${c.descricao}
+        compDiv.innerHTML = `
+          ${c.descricao}
+          <button class="edit-btn" onclick="editarCompromisso('${pessoaSelecionada}','${c.hora}','${c.dia}','${c.mes}','${c.ano}','${c.descricao.replace(/'/g, "\\'")}')">✏️</button>
           <button class="cancel-btn" onclick="cancelarCompromisso('${pessoaSelecionada}','${c.hora}','${c.dia}','${c.mes}','${c.ano}')">❌</button>`;
         slotDiv.appendChild(compDiv);
       });
@@ -175,6 +177,50 @@ async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
     abrirAgenda(new Date(ano, mes - 1, dia));
   } catch (e) {
     console.error("Erro ao cancelar compromisso:", e);
+  }
+}
+
+async function editarCompromisso(pessoa, hora, dia, mes, ano, descricaoAtual) {
+  const novaDesc = prompt("Editar descrição:", descricaoAtual);
+  if (!novaDesc || novaDesc === descricaoAtual) return;
+
+  try {
+    const res = await fetch("/compromissos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pessoa, hora, dia, mes, ano, descricao: novaDesc })
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    alert("Compromisso atualizado!");
+
+    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
+    compromissosMes = await resMes.json();
+
+    abrirAgenda(new Date(ano, mes - 1, dia));
+  } catch (e) {
+    console.error("Erro ao editar compromisso:", e);
+    alert("Erro ao editar compromisso.");
+  }
+}
+
+async function editarCompromisso(id, descricaoAtual) {
+  const novaDesc = prompt("Editar descrição:", descricaoAtual);
+  if (!novaDesc || novaDesc === descricaoAtual) return;
+
+  try {
+    const res = await fetch(`/compromissos/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ descricao: novaDesc })
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    alert("Compromisso atualizado!");
+    await renderCalendario();
+  } catch (e) {
+    console.error("Erro ao editar compromisso:", e);
+    alert("Erro ao editar compromisso.");
   }
 }
 
