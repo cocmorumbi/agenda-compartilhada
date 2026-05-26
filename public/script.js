@@ -178,6 +178,14 @@ async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
   }
 }
 
+setInterval(() => {
+  if (pessoaSelecionada && diaSelecionado) {
+    abrirAgenda(diaSelecionado);
+  } else {
+    abrirHoje();
+  }
+}, 30000);
+
 abrirHoje();
 
 async function abrirHoje(event) {
