@@ -5,267 +5,186 @@
   <title>Agenda de compromissos - COC Morumbi</title>
   <style>
     body { 
-      margin:0; 
-      font-family:Arial,sans-serif; 
-      display:flex; 
-      height:100vh; 
+      margin: 0; 
+      font-family: Arial, sans-serif; 
+      display: flex; 
+      height: 100vh; 
+      background-color: #f4f7f6;
+      overflow: hidden; /* Mantém a tela fixa na área de trabalho */
     }
     header { 
-      position:fixed; 
-      top:0; 
-      left:0; 
-      right:0; 
-      background:#3A6604; 
-      color:white; 
-      padding:20px; 
-      text-align:center; 
-      font-size:20px; 
-      font-weight:bold; 
-      z-index:1000; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      background: #3A6604; 
+      color: white; 
+      padding: 20px; 
+      text-align: center; 
+      font-size: 20px; 
+      font-weight: bold; 
+      z-index: 1000; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     .sidebar { 
-      margin-top:60px; 
-      width:180px; 
-      background:#99CD85; 
-      display:flex; 
-      flex-direction:column; 
-      padding:20px; 
+      margin-top: 60px; 
+      width: 220px; 
+      background: #99CD85; 
+      display: flex; 
+      flex-direction: column; 
+      padding: 20px; 
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
     .sidebar div { 
-      margin:10px 0; 
-      padding:12px; 
-      cursor:pointer; 
-      text-align:center; 
-      border-radius:8px; 
-      font-weight:bold; 
-      background:#3A6604; 
-      color:white; 
-      transition:all 0.7s ease; 
+      margin: 10px 0; 
+      padding: 14px; 
+      cursor: pointer; 
+      text-align: center; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      background: #3A6604; 
+      color: white; 
+      transition: all 0.3s ease; 
     }
     .sidebar div:hover { 
-      background: rgba(255,255,255,0.3); 
-      transform: scale(1.05); 
+      background: rgba(255, 255, 255, 0.3); 
+      transform: scale(1.03); 
     }
     .sidebar div.active { 
-      background: linear-gradient(45deg, yellow, #f7f79a); 
-      color:black; 
-      box-shadow:0 0 10px rgba(255,255,0,0.6); 
+      background: linear-gradient(45deg, #ffd700, #ffff99); 
+      color: #111; 
+      box-shadow: 0 0 12px rgba(255, 255, 0, 0.8); 
     }
     .main { 
-      flex:1; 
-      padding:100px 20px 20px 20px; 
-      overflow-y:auto; 
+      flex: 1; 
+      padding: 100px 40px 40px 40px; 
+      overflow-y: auto; 
+      background: #ffffff;
     }
     .calendar-controls { 
-      display:flex; 
-      justify-content:center; 
-      align-items:center; 
-      gap:15px; 
-      margin-bottom:20px; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      gap: 20px; 
+      margin-bottom: 25px; 
     }
     .calendar-controls button { 
-      background:#3A6604; 
-      color:white; 
-      border:none; 
-      border-radius:50%; 
-      width:40px; 
-      height:40px; 
-      cursor:pointer; 
-      font-weight:bold; 
-      font-size:18px; 
-      box-shadow:0 2px 6px rgba(0,0,0,0.2); 
+      background: #3A6604; 
+      color: white; 
+      border: none; 
+      border-radius: 50%; 
+      width: 40px; 
+      height: 40px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      font-size: 16px; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
       transition: background 0.3s ease, transform 0.2s ease; 
     }
     .calendar-controls button:hover { 
-      background:#2a4703; 
+      background: #2a4703; 
       transform: scale(1.1); 
     }
     .calendar { 
-      display:grid; 
-      grid-template-columns:repeat(7,1fr); 
-      gap:5px; 
-      margin-bottom:20px; 
-      animation:fadeIn 0.5s ease; 
-      }
+      display: grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap: 10px; 
+      margin-bottom: 25px; 
+      animation: fadeIn 0.4s ease; 
+    }
     .day { 
-      border:3px solid #ccc; 
-      padding:12px; 
-      text-align:center; 
-      border-radius:5px; 
-      cursor:pointer; 
-      font-weight:bold; 
-      transition:all 0.3s ease; 
+      border: 2px solid #ddd; 
+      padding: 20px 10px; 
+      text-align: center; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      background: #fafafa;
+      min-height: 50px;
+      transition: all 0.2s ease; 
     }
     .day:hover { 
-      transform: scale(1.05); 
-      background:#eaffea; 
+      transform: scale(1.03); 
+      background: #eaffea; 
+      border-color: #3A6604;
     }
     .day.has-event { 
-      background:#d1ffd1; 
+      background: #d1ffd1; 
+      border-color: #99CD85;
     }
     .day.full { 
-      background:#ffb3b3; 
+      background: #ffb3b3; 
+      border-color: #ff4d4d;
     }
     .day.today { 
-      border:3px solid #83E509; 
+      border: 3px solid #83E509; 
     }
     .agenda { 
-      display:none; 
-      border-top:3px solid #99CD85; 
-      padding-top:10px; 
-      opacity:0; 
-      transition:opacity 0.4s ease; 
+      display: none; 
+      border-top: 3px solid #99CD85; 
+      padding-top: 20px; 
+      opacity: 0; 
+      transition: opacity 0.3s ease; 
     }
     .agenda.active { 
-      display:block; 
-      opacity:1; 
+      display: block; 
+      opacity: 1; 
     }
     .slot { 
-      border:1px solid #ccc; 
-      padding:6px; 
-      margin:3px 0; 
-      cursor:pointer; 
-      text-align:left; 
-      display:flex; 
-      justify-content:space-between; 
-      align-items:center; 
-      transition:background 0.3s ease; 
-      position:relative; 
-    }
-    .slot:hover { 
-      background:#f0f0f0; 
+      border: 1px solid #ccc; 
+      padding: 12px; 
+      margin: 8px 0; 
+      border-radius: 6px;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: #fdfdfd;
     }
     .slot.booked { 
-      background:linear-gradient(90deg, #ffe5e5, #ffcccc); 
-      border-left:5px solid red; 
-      font-weight:bold; 
-      cursor:default; 
-    }
-    .slot.booked:hover::after { 
-      content:"Clique no ❌ para cancelar"; 
-      position:absolute; 
-      background:#333; 
-      color:#fff; 
-      padding:3px 6px; 
-      border-radius:4px; 
-      font-size:12px; 
-      top:-25px; 
-      left:10px; 
-      white-space:nowrap; 
+      background: linear-gradient(90deg, #ffe5e5, #ffcccc); 
+      border-left: 5px solid red; 
+      font-weight: bold; 
     }
     .cancel-btn { 
-      background:rgb(255,0,0); 
-      color:white; 
-      border:none; 
-      border-radius:5px; 
-      padding:2px 6px; 
-      cursor:pointer; 
-      font-size:12px; 
-      transition:background 0.3s ease; 
+      background: #ff4d4d; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      padding: 6px 12px; 
+      cursor: pointer; 
+      font-size: 13px; 
+      transition: background 0.3s ease; 
     }
     .cancel-btn:hover { 
-      background:darkred; 
+      background: #cc0000; 
     }
-    .loading {
-      text-align: center;
-      font-weight: bold;
-      color: #666;
-      padding: 20px;
-      font-size: 1.1em;
+    .marcar-btn { 
+      background: #3A6604; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      padding: 6px 12px; 
+      cursor: pointer; 
+      font-size: 13px; 
+    }
+    .marcar-btn:hover {
+      background: #2a4703;
     }
     #mes-atual { 
-      font-size:24px; 
-      font-weight:bold; 
-      text-align:center; 
-      color:#161616; 
-      min-width:180px; 
-    }
-    .booked-item {
-      background: #f0f0f0;
-      border-radius: 6px;
-      padding: 4px 6px;
-      margin: 4px 0;
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .booked-item .cancel-btn {
-      margin-left: 8px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-    }
-    .horario {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      border-bottom: 1px solid #ddd;
-      padding: 5px 0;
-    }
-    .hora-label {
-      width: 60px;
-      font-weight: bold;
-    }
-    .compromissos-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .compromisso-item {
-      background: #f3f3f3;
-      border-radius: 4px;
-      padding: 3px 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .cancelar-btn {
-      background: transparent;
-      border: none;
-      color: red;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .marcar-btn {
-      background: #2196f3;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-    }
-    .compromisso {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      border-left: 3px solid #007bff;
-      background: #f0f6ff;
-      margin: 4px 0;
-      padding: 6px 10px;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .compromisso .hora {
-      font-weight: bold;
-      color: #333;
-      min-width: 50px;
-    }
-    .compromisso .detalhes {
-      flex: 1;
-      color: #444;
+      font-size: 22px; 
+      font-weight: bold; 
+      text-align: center; 
+      color: #333; 
+      min-width: 200px; 
     }
     #nav-mes { 
-      display:none; 
-      justify-content:center; 
-      align-items:center; 
-      gap:15px; 
-      margin-bottom:20px; 
+      display: none; 
     }
-    @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-    @media(max-width:768px){ body{flex-direction:column;} .sidebar{flex-direction:row; justify-content:space-around; width:100%; margin-top:60px;} .sidebar div{flex:1; margin:5px; padding:10px; font-size:14px;} .main{padding:20px;} .calendar{grid-template-columns:repeat(2,1fr);} #mes-atual{font-size:20px;} }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(6px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
   </style>
 </head>
 <body>
@@ -281,7 +200,7 @@
   </div>
 
   <div class="main">
-    <h2 id="pessoa-titulo">Selecione uma pessoa</h2>
+    <h2 id="pessoa-titulo">Selecione uma pessoa na barra lateral</h2>
 
     <div id="nav-mes" class="calendar-controls">
       <button onclick="mudarMes(-1)">⏮</button>
