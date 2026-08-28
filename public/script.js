@@ -209,6 +209,9 @@ async function editarCompromisso(id, descricaoAtual, dia, mes, ano) {
 }
 
 async function cancelarCompromisso(id, dia, mes, ano) {
+  const confirmar = confirm("Tem certeza que deseja cancelar este compromisso?");
+  if (!confirmar) return;
+
   try {
     const res = await fetch(`/compromissos/${id}`, {
       method: "DELETE"
@@ -222,6 +225,7 @@ async function cancelarCompromisso(id, dia, mes, ano) {
     abrirAgenda(new Date(ano, mes - 1, dia));
   } catch (e) {
     console.error("Erro ao cancelar compromisso:", e);
+    alert("Não foi possível cancelar o compromisso.");
   }
 }
 
