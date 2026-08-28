@@ -183,15 +183,25 @@ async function marcarCompromisso(pessoa, hora, dia, mes, ano, desc) {
   abrirAgenda(new Date(ano, mes-1, dia));
 }
 
-// Cancelar compromisso
-async function cancelarCompromisso(pessoa, hora, dia, mes, ano) {
-  await fetch("/compromissos", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pessoa, hora, dia, mes, ano })
-  });
-  renderCalendario();
-  abrirAgenda(new Date(ano, mes-1, dia));
+async function cancelarCompromisso(id, dia, mes, ano) {
+  const confirmar = confirm("Tem certeza que deseja cancelar este compromisso?");
+  if (!confirmar) return;
+
+  try {
+    const res = await fetch(`/compromissos/${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
+    compromissosMes = await resMes.json();
+
+    abrirAgenda(new Date(ano, mes - 1, dia));
+  } catch (e) {
+    console.error("Erro ao cancelar compromisso:", e);
+    alert("Não foi possível cancelar o compromisso.");
+  }
 }
 
 // ===============================
