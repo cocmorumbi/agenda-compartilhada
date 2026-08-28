@@ -208,3 +208,4 @@ async function cancelarCompromisso(id, dia, mes, ano) {
 // Início
 // ===============================
 abrirHoje();
+
