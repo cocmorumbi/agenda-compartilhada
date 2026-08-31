@@ -1,19 +1,17 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const pool = require("./db"); // conexão com banco
+const pool = require("./db");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// 👉 Servir os arquivos da pasta public (frontend)
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------------------- ROTAS API ---------------------- //
-
-// Buscar compromissos (filtrando por dia/mes/ano se vier na query)
+// Buscar compromissos
 app.get("/compromissos", async (req, res) => {
   try {
     const { dia, mes, ano } = req.query;
@@ -33,6 +31,8 @@ app.get("/compromissos", async (req, res) => {
       query += ` AND ano = $${values.length}`;
     }
 
+    query += " ORDER BY hora, pessoa";
+
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (err) {
@@ -41,7 +41,7 @@ app.get("/compromissos", async (req, res) => {
   }
 });
 
-// Criar compromisso
+// Criar compromisso (retorna o ID criado)
 app.post("/compromissos", async (req, res) => {
   try {
     const { pessoa, descricao, hora, dia, mes, ano } = req.body;
@@ -50,7 +50,7 @@ app.post("/compromissos", async (req, res) => {
       "INSERT INTO compromissos (pessoa, descricao, hora, dia, mes, ano) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
       [pessoa, descricao, hora, dia, mes, ano]
     );
-
+    console.log("Salvo:", result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -58,30 +58,54 @@ app.post("/compromissos", async (req, res) => {
   }
 });
 
-// Cancelar compromisso
-app.delete("/compromissos", async (req, res) => {
+app.delete("/compromissos/:id", async (req, res) => {
   try {
-    const { pessoa, hora, dia, mes, ano } = req.body;
+    const { id } = req.params;
+    const result = await pool.query("DELETE FROM compromissos WHERE id = $1", [id]);
 
-    await pool.query(
-      "DELETE FROM compromissos WHERE pessoa=$1 AND hora=$2 AND dia=$3 AND mes=$4 AND ano=$5",
-      [pessoa, hora, dia, mes, ano]
-    );
-
-    res.send("Compromisso cancelado");
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: "Compromisso não encontrado."
+      });
+    }
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: "Compromisso cancelado com sucesso!",
+      idExcluido: id
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Erro ao excluir compromisso");
+    res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao excluir compromisso"
+    });
   }
 });
 
-// ---------------------- FRONTEND ---------------------- //
-// Qualquer rota que não for API → carrega o index.html
+// Atualizar compromisso
+app.put("/compromissos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { descricao } = req.body;
+
+    const result = await pool.query(
+      "UPDATE compromissos SET descricao = $1 WHERE id = $2 RETURNING *",
+      [descricao, id]
+    );
+
+    console.log("Atualizado:", result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao atualizar compromisso");
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---------------------- PORTA ---------------------- //
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
