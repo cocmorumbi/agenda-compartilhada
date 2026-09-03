@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const cron = require("node-cron");
 const pool = require("./db");
 
 const app = express();
@@ -99,6 +100,19 @@ app.put("/compromissos/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro ao atualizar compromisso");
+  }
+});
+
+// Tarefa agendada para limpar compromissos com mais de 1 ano (todo dia 1º à meia-noite)
+cron.schedule("0 0 1 * *", async () => {
+  try {
+    await pool.query(`
+      DELETE FROM compromissos 
+      WHERE MAKE_DATE(ano, mes, dia) < CURRENT_DATE - INTERVAL '1 year';
+    `);
+    console.log("Limpeza automática de compromissos antigos executada com sucesso.");
+  } catch (error) {
+    console.error("Erro ao executar limpeza automática de compromissos:", error);
   }
 });
 
