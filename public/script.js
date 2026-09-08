@@ -9,6 +9,37 @@ let anoAtual = new Date().getFullYear();
 let mesAtual = new Date().getMonth();
 let compromissosMes = [];
 
+function initSSE() {
+  const eventSource = new EventSource('/api/events-stream');
+
+  eventSource.onmessage = async (event) => {
+    console.log("Atualização em tempo real recebida na agenda.");
+
+    // Se estiver visualizando o calendário de uma pessoa, atualiza o mês atual
+    if (pessoaSelecionada) {
+      try {
+        const res = await fetch(`/compromissos?mes=${mesAtual + 1}&ano=${anoAtual}`);
+        compromissosMes = await res.json();
+        renderCalendario();
+
+        // Se também houver um dia aberto na drawer/agenda, atualiza ele em tempo real
+        if (diaSelecionado) {
+          abrirAgenda(diaSelecionado);
+        }
+      } catch (e) {
+        console.error("Erro ao atualizar dados via SSE:", e);
+      }
+    } else {
+      // Se estiver na aba "Hoje", recarrega os compromissos do dia atual
+      abrirHoje();
+    }
+  };
+
+  eventSource.onerror = (error) => {
+    console.error("Erro na conexão SSE, tentando reconectar...", error);
+  };
+}
+
 function selecionarPessoa(nome, event) {
   if (calendarEl) calendarEl.innerHTML = "";
   
@@ -229,13 +260,7 @@ async function cancelarCompromisso(id, dia, mes, ano) {
   }
 }
 
-setInterval(() => {
-  if (pessoaSelecionada && diaSelecionado) {
-    abrirAgenda(diaSelecionado);
-  } else {
-    abrirHoje();
-  }
-}, 300000);
+initSSE();
 
 abrirHoje();
 

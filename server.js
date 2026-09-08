@@ -7,6 +7,8 @@ const pool = require("./db");
 
 const app = express();
 
+let clients = [];
+
 app.use(cors());
 app.use(express.json());
 
@@ -42,6 +44,30 @@ app.get("/compromissos", async (req, res) => {
   }
 });
 
+app.get("/api/events-stream", (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  clients.push(res);
+
+  req.on('close', () => {
+    clients = clients.filter(client => client !== res);
+  });
+});
+
+function notifyClients() {
+  clients.forEach(client => {
+    client.write(`data: ${JSON.stringify({ updated: true })}\n\n`);
+  });
+}
+
+setInterval(() => {
+  clients.forEach(client => {
+    client.write(': ping\n\n');
+  });
+}, 14 * 60 * 1000);
+
 // Criar compromisso (retorna o ID criado)
 app.post("/compromissos", async (req, res) => {
   try {
@@ -52,6 +78,8 @@ app.post("/compromissos", async (req, res) => {
       [pessoa, descricao, hora, dia, mes, ano]
     );
     console.log("Salvo:", result.rows[0]);
+    
+    notifyClients(); // Atualização
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -70,6 +98,8 @@ app.delete("/compromissos/:id", async (req, res) => {
         mensagem: "Compromisso não encontrado."
       });
     }
+
+    notifyClients(); // Atualização
     return res.status(200).json({
       sucesso: true,
       mensagem: "Compromisso cancelado com sucesso!",
@@ -96,6 +126,8 @@ app.put("/compromissos/:id", async (req, res) => {
     );
 
     console.log("Atualizado:", result.rows[0]);
+
+    notifyClients(); // Atualização
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
