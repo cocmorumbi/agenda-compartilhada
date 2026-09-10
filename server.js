@@ -66,7 +66,7 @@ setInterval(() => {
   clients.forEach(client => {
     client.write(': ping\n\n');
   });
-}, 14 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 // Criar compromisso (retorna o ID criado)
 app.post("/compromissos", async (req, res) => {
