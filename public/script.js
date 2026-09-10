@@ -205,11 +205,7 @@ async function marcarCompromisso(pessoa, hora, dia, mes, ano, desc) {
     });
 
     if (!res.ok) throw new Error(await res.text());
-
-    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
-    compromissosMes = await resMes.json();
-
-    abrirAgenda(new Date(ano, mes - 1, dia));
+    // O SSE vai atualizar a tela automaticamente.
   } catch (e) {
     console.error("Erro ao marcar compromisso:", e);
     alert("Não foi possível salvar o compromisso.");
@@ -228,11 +224,7 @@ async function editarCompromisso(id, descricaoAtual, dia, mes, ano) {
     });
 
     if (!res.ok) throw new Error(await res.text());
-
-    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
-    compromissosMes = await resMes.json();
-
-    abrirAgenda(new Date(ano, mes - 1, dia));
+    // O SSE vai atualizar a tela automaticamente.
   } catch (e) {
     console.error("Erro ao editar compromisso:", e);
     alert("Não foi possível editar o compromisso.");
@@ -249,11 +241,7 @@ async function cancelarCompromisso(id, dia, mes, ano) {
     });
 
     if (!res.ok) throw new Error(await res.text());
-
-    const resMes = await fetch(`/compromissos?mes=${mes}&ano=${ano}`);
-    compromissosMes = await resMes.json();
-
-    abrirAgenda(new Date(ano, mes - 1, dia));
+    // O SSE vai atualizar a tela automaticamente.
   } catch (e) {
     console.error("Erro ao cancelar compromisso:", e);
     alert("Não foi possível cancelar o compromisso.");
